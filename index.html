@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ANIME KOMBAT — Solo & Multiplayer</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#070912;color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif;min-height:100vh;display:grid;place-items:center;padding:16px}
+button{font:inherit}
+.hidden{display:none!important}
+.screen{width:min(1050px,96vw);background:linear-gradient(145deg,#171a31,#0a0d19);border:1px solid #3e456d;border-radius:20px;padding:24px;box-shadow:0 24px 70px #0009}
+h1{text-align:center;margin:0;color:#ffd54a;letter-spacing:3px;font-size:clamp(28px,5vw,48px)}
+.sub{text-align:center;color:#aeb5d0;margin:8px 0 24px}
+.modes{display:flex;justify-content:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.mode{padding:12px 24px;border:1px solid #454d77;background:#11152a;color:#fff;border-radius:12px;cursor:pointer;font-weight:800}
+.mode.active{border-color:#ffd54a;background:#29243b}
+.roster{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{border:2px solid #353b5c;border-radius:14px;background:#11152a;color:#fff;padding:10px;cursor:pointer;text-align:center}
+.card:hover{border-color:#ffd54a;transform:translateY(-2px)}
+.card.selected{border-color:#35e58b;box-shadow:0 0 22px #35e58b33}
+.card.bot{border-color:#ff8a65}
+.card canvas{width:100%;height:145px;display:block;background:linear-gradient(#141a31,#0b0e19);border-radius:9px}
+.card b{display:block;margin-top:7px;letter-spacing:1px}
+#start{display:block;margin:22px auto 0;padding:13px 40px;border:0;border-radius:12px;background:#7250ed;color:white;font-weight:900;cursor:pointer}
+#start:disabled{opacity:.35;cursor:not-allowed}
+#game{width:min(1120px,98vw)}
+#stage{width:100%;height:auto;display:block;border:2px solid #41476c;border-radius:16px;background:#10152a;box-shadow:0 20px 70px #000b}
+.info{text-align:center;color:#aeb5d0;font-size:13px;line-height:1.7;margin-top:8px}
+kbd{background:#171c32;border:1px solid #4a5175;border-radius:5px;padding:2px 6px;color:#fff}
+#back{display:block;margin:10px auto 0;padding:8px 16px;border:1px solid #454c70;background:#11152a;color:#dce0f2;border-radius:9px;cursor:pointer}
+@media(max-width:760px){.roster{grid-template-columns:repeat(2,1fr)}.screen{padding:16px}.card canvas{height:120px}}
+</style>
+
+<style id="pixel-ui">
+*{box-sizing:border-box;image-rendering:pixelated;image-rendering:crisp-edges}
+html,body{image-rendering:pixelated}
+body{background:#070a10!important;font-family:"Courier New",monospace!important;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 2px,transparent 2px 6px),repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 2px,transparent 2px 6px)!important}
+.screen{border-radius:0!important;border:4px solid #65718f!important;background:#151c2d!important;box-shadow:8px 8px 0 #020307,0 0 0 4px #080b12!important}
+h1{font-family:"Courier New",monospace!important;font-weight:900!important;letter-spacing:6px!important;color:#ffd84d!important;text-shadow:4px 4px 0 #000!important;text-transform:uppercase}
+.sub{font-family:"Courier New",monospace!important;color:#c6cce0!important}
+.mode,#start,#back{font-family:"Courier New",monospace!important;border-radius:0!important;border:3px solid #66718d!important;background:#182134!important;box-shadow:4px 4px 0 #03050a!important;text-transform:uppercase;font-weight:900!important}
+.mode:hover,#start:hover,#back:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #03050a!important}
+.mode.active{border-color:#ffd84d!important;background:#37415a!important;color:#ffd84d!important}
+#start{background:#263c2f!important;border-color:#4be18c!important}
+#start:disabled{filter:grayscale(1);opacity:.4}
+.roster{gap:12px!important}
+.card{border-radius:0!important;border:3px solid #4d5873!important;background:#111827!important;box-shadow:4px 4px 0 #03050a!important;transition:none!important}
+.card:hover{transform:none!important;border-color:#ffd84d!important}
+.card.selected{border-color:#4be18c!important;box-shadow:4px 4px 0 #03050a,0 0 0 2px #111827!important}
+.card.bot{border-color:#ff5969!important}
+.card canvas{border-radius:0!important;background:repeating-conic-gradient(#182033 0 25%,#0f1522 0 50%) 0/16px 16px!important}
+#stage{border-radius:0!important;border:4px solid #65718f!important;box-shadow:8px 8px 0 #020307,0 0 0 4px #080b12!important;image-rendering:pixelated!important}
+.info{font-family:"Courier New",monospace!important;color:#c6cce0!important}
+kbd{border-radius:0!important;border:2px solid #78849f!important;background:#111827!important;box-shadow:2px 2px 0 #03050a!important;font-family:"Courier New",monospace!important;font-weight:900}
+</style>
+</head>
+<body>
+<section id="select" class="screen">
+<h1>ANIME KOMBAT</h1>
+<div class="sub">Local 2-player battles or Solo vs Bot. Each player controls one fighter.</div>
+<div class="modes">
+<button class="mode active" id="soloMode" type="button">SOLO VS BOT</button>
+<button class="mode" id="multiMode" type="button">2 PLAYER LOCAL</button>
+</div>
+<div id="pickText" class="sub">Choose your fighter. The bot will automatically choose an opponent.</div>
+<div id="roster" class="roster"></div>
+<button id="start" type="button" disabled>START MATCH</button>
+</section>
+
+<section id="game" class="hidden">
+<canvas id="stage" width="1100" height="560"></canvas>
+<div class="info">
+P1: <kbd>A</kbd><kbd>D</kbd> move · <kbd>W</kbd> jump · <kbd>S</kbd> block/crouch · <kbd>F</kbd> punch · <kbd>G</kbd> kick · <kbd>H</kbd> special<br>
+P2: <kbd>←</kbd><kbd>→</kbd> move · <kbd>↑</kbd> jump · <kbd>↓</kbd> block · <kbd>,</kbd> punch · <kbd>.</kbd> kick · <kbd>/</kbd> special
+</div>
+<button id="back" type="button">BACK TO MENU</button>
+</section>
+
+<script>
+'use strict';
+
+const canvas=document.getElementById('stage'),ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height,GROUND=455;
+const sheets={
+ gojo:{name:'GOJO',src:'gojo_sheet.png'},
+ sukuna:{name:'SUKUNA',src:'sukuna_sheet.png'},
+ luffy:{name:'LUFFY',src:'luffy_sheet.png'},
+ zoro:{name:'ZORO',src:'zoro_sheet.png'}
+};
+for(const s of Object.values(sheets)){s.img=new Image();s.img.src=s.src;}
+
+const keys=Object.create(null),pressed=Object.create(null);
+window.addEventListener('keydown',e=>{
+ if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();
+ if(!keys[e.code])pressed[e.code]=true;
+ keys[e.code]=true;
+});
+window.addEventListener('keyup',e=>keys[e.code]=false);
+window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
+
+const frameSets={
+ // Rectangles are [x,y,w,h,frames]. They are the animation panels in the supplied sheets.
+ gojo:{
+  idle:[15,47,370,145,4],walk:[385,47,500,145,5],punch:[15,258,410,145,4],kick:[490,258,390,145,4],
+  jump:[15,454,410,290,4],jumpPunch:[490,454,390,145,4],jumpKick:[490,615,390,130,3]
+ },
+ sukuna:{
+  idle:[15,47,370,145,4],walk:[385,47,500,145,5],punch:[15,258,410,145,4],kick:[490,258,390,145,4],
+  jump:[15,454,410,290,4],jumpPunch:[490,454,390,145,4],jumpKick:[490,615,390,130,3]
+ },
+ luffy:{
+  idle:[15,47,370,145,4],walk:[385,47,500,145,5],punch:[15,258,410,145,4],kick:[490,258,390,145,4],
+  jump:[15,454,410,290,4],jumpPunch:[490,454,390,145,4],jumpKick:[490,615,390,130,3]
+ },
+ zoro:{
+  idle:[15,47,370,145,4],walk:[385,47,500,145,5],punch:[15,258,410,145,4],kick:[490,258,390,145,4],
+  jump:[15,454,410,290,4],jumpPunch:[490,454,390,145,4],jumpKick:[490,615,390,130,3]
+ }
+};
+
+const specialSets={
+ gojo:{name:'CURSED TECHNIQUE',rect:[914,47,475,120,3]},
+ sukuna:{name:'MALEVOLENT SHRINE',rect:[914,454,475,290,5]},
+ luffy:{name:'GOMU GOMU PUNCH',rect:[914,47,475,120,3]},
+ zoro:{name:'THREE SWORD STYLE',rect:[914,47,475,120,4]}
+};
+
+function frameRect(key,anim,index){
+ const r=frameSets[key][anim]||frameSets[key].idle;
+ const [x,y,w,h,n]=r;
+ const fw=w/n;
+ return {sx:x+fw*index,sy:y,sw:fw,sh:h};
+}
+
+function drawSprite(key,anim,index,x,y,w,h,flip=1,alpha=1){
+ const s=sheets[key],r=frameRect(key,anim,index);
+ if(!s.img.complete||!s.img.naturalWidth)return;
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(x+w/2,y+h/2);ctx.scale(flip,1);
+ ctx.imageSmoothingEnabled=false;
+ ctx.drawImage(s.img,r.sx,r.sy,r.sw,r.sh,-w/2,-h/2,w,h);
+ ctx.restore();
+}
+
+let mode='solo',chosen=null,p2Choice=null,selectStage=1,p1=null,p2=null,over=false,raf=0;
+const controls1={left:'KeyA',right:'KeyD',jump:'KeyW',block:'KeyS',punch:'KeyF',kick:'KeyG',special:'KeyH'};
+const controls2={left:'ArrowLeft',right:'ArrowRight',jump:'ArrowUp',block:'ArrowDown',punch:'Comma',kick:'Period',special:'Slash'};
+
+const roster=document.getElementById('roster');
+for(const [key,s] of Object.entries(sheets)){
+ const b=document.createElement('button');b.type='button';b.className='card';b.dataset.key=key;
+ const c=document.createElement('canvas');c.width=260;c.height=145;b.appendChild(c);
+ const label=document.createElement('b');label.textContent=s.name;b.appendChild(label);
+ b.addEventListener('click',()=>choose(key));
+ roster.appendChild(b);
+}
+
+function previewCards(){
+ for(const card of roster.children){
+  const c=card.querySelector('canvas'),x=c.getContext('2d'),key=card.dataset.key;
+  x.clearRect(0,0,c.width,c.height);x.fillStyle='#0b0f1e';x.fillRect(0,0,c.width,c.height);
+  const s=sheets[key],r=frameRect(key,'idle',1);
+  if(s.img.complete)x.drawImage(s.img,r.sx,r.sy,r.sw,r.sh,35,5,190,135);
+ }
+}
+for(const s of Object.values(sheets))s.img.onload=previewCards;
+function choose(key){
+ if(mode==='solo'){
+  chosen=key;p2Choice=null;
+  document.querySelectorAll('.card').forEach(c=>c.classList.toggle('selected',c.dataset.key===key));
+  document.getElementById('start').disabled=false;
+  document.getElementById('pickText').textContent='You play '+sheets[key].name+'. The bot will automatically choose an opponent.';
+ }else{
+  if(selectStage===1){
+   chosen=key;selectStage=2;
+   document.querySelectorAll('.card').forEach(c=>c.classList.toggle('selected',c.dataset.key===key));
+   document.getElementById('start').disabled=true;
+   document.getElementById('pickText').textContent='Player 1: '+sheets[key].name+'. Now click a DIFFERENT fighter for Player 2.';
+  }else{
+   if(key===chosen){document.getElementById('pickText').textContent='Player 2 must choose a different fighter.';return;}
+   p2Choice=key;
+   document.querySelectorAll('.card').forEach(c=>{
+    c.classList.toggle('selected',c.dataset.key===chosen||c.dataset.key===key);
+   });
+   document.getElementById('start').disabled=false;
+   document.getElementById('pickText').textContent='P1: '+sheets[chosen].name+'  vs  P2: '+sheets[key].name;
+  }
+ }
+}
+
+document.getElementById('soloMode').onclick=()=>{
+ mode='solo';selectStage=1;p2Choice=null;
+ document.getElementById('soloMode').classList.add('active');document.getElementById('multiMode').classList.remove('active');
+ document.getElementById('pickText').textContent=chosen?'You play '+sheets[chosen].name+'. The bot will automatically choose an opponent.':'Choose your fighter. The bot will automatically choose an opponent.';
+ document.getElementById('start').disabled=!chosen;
+};
+document.getElementById('multiMode').onclick=()=>{
+ mode='multi';selectStage=1;p2Choice=null;chosen=null;
+ document.getElementById('multiMode').classList.add('active');document.getElementById('soloMode').classList.remove('active');
+ document.getElementById('pickText').textContent='Choose Player 1. Then choose a different fighter for Player 2.';
+ document.getElementById('start').disabled=true;
+ document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+};
+
+class Fighter{
+ constructor(x,key,controls,face,ai=false){
+  this.x=x;this.y=GROUND-155;this.w=145;this.h=155;this.key=key;this.name=sheets[key].name;this.c=controls;this.face=face;
+  this.ai=ai;this.vx=0;this.vy=0;this.hp=100;this.grounded=true;this.jumps=0;this.state='idle';this.anim=0;
+  this.attack=0;this.cool=0;this.hitDone=false;this.hitstun=0;this.block=false;this.special=0;
+  this.aiThink=0;this.aiMove=0;this.aiAttack=0;
+ }
+ hurtbox(){return{x:this.x+28,y:this.y+10,w:this.w-56,h:this.h-12};}
+ input(){
+  if(this.hitstun>0||this.special>0)return;
+  if(this.ai){this.botInput();return;}
+  if(pressed[this.c.jump]&&this.jumps<2){this.vy=this.jumps? -12.5:-15.5;this.jumps++;this.grounded=false;}
+  if(pressed[this.c.punch])this.startAttack('punch');
+  if(pressed[this.c.kick])this.startAttack('kick');
+  if(pressed[this.c.special])this.startSpecial();
+  if(this.attack>0)return;
+  this.block=!!keys[this.c.block];
+  if(this.block){this.vx*=.7;this.state='block';return;}
+  const l=!!keys[this.c.left],r=!!keys[this.c.right];
+  if(l!==r){this.vx+=(r?1:-1)*.8;this.vx=Math.max(-6,Math.min(6,this.vx));this.face=r?1:-1;this.state=this.grounded?'walk':'jump';}
+  else{this.vx*=.75;if(Math.abs(this.vx)<.1)this.vx=0;this.state=this.grounded?'idle':'jump';}
+ }
+ botInput(){
+  if(!p1)return;
+  const target=p1,dx=target.x-this.x,dist=Math.abs(dx);
+  this.aiThink--;
+  if(this.aiThink<=0){
+   this.aiThink=8+Math.random()*12;
+   this.aiMove=dist>175?(dx>0?1:-1):0;
+   if(dist<165&&Math.random()<.45)this.aiAttack=1;
+   if(Math.random()<.12&&this.grounded)this.aiJump=1;
+   if(dist<190&&Math.random()<.12)this.aiBlock=8+Math.random()*15;
+  }
+  if(this.aiJump){this.aiJump=0;if(this.jumps<2){this.vy=-15;this.jumps++;this.grounded=false;}}
+  if(this.aiAttack){this.aiAttack=0;this.startAttack(Math.random()<.55?'punch':'kick');}
+  if(this.aiBlock>0){this.aiBlock--;this.block=true;this.state='block';return;}
+  this.block=false;
+  if(this.attack>0)return;
+  if(this.aiMove){this.vx+=this.aiMove*.8;this.vx=Math.max(-5.5,Math.min(5.5,this.vx));this.face=this.aiMove;this.state=this.grounded?'walk':'jump';}
+  else{this.vx*=.75;this.state=this.grounded?'idle':'jump';}
+ }
+ startAttack(type){if(this.cool||this.attack||this.block||this.special)return;this.attack=18;this.attackType=type;this.hitDone=false;this.cool=25;this.state=type;}
+ startSpecial(){if(this.cool||this.attack||this.block||this.special)return;this.special=34;this.cool=65;this.state='special';}
+ update(){
+  this.anim+=.18;if(this.cool>0)this.cool--;if(this.hitstun>0)this.hitstun--;if(this.special>0)this.special--;
+  if(this.attack>0){this.attack--;if(this.attack===0)this.state='idle';}
+  if(this.special===0&&this.state==='special')this.state='idle';
+  this.vy+=.82;this.vy=Math.min(17,this.vy);this.x+=this.vx;this.y+=this.vy;
+  this.x=Math.max(8,Math.min(W-this.w-8,this.x));
+  if(this.y+this.h>=GROUND){this.y=GROUND-this.h;this.vy=0;this.grounded=true;this.jumps=0;}else this.grounded=false;
+ }
+ attackBox(){
+  if(this.attack<=0)return null;
+  const reach=this.attackType==='kick'?105:88;
+  return{x:this.face>0?this.x+this.w-10:this.x-reach+10,y:this.y+55,w:reach,h:55};
+ }
+ canHit(){return this.attack>0&&this.attack<=12&&this.attack>=5&&!this.hitDone;}
+ draw(){
+  let anim=this.state==='punch'||this.state==='kick'?this.state:(this.state==='jump'?'jump':this.state==='block'?'idle':this.state);
+  let idx=0,n=(frameSets[this.key][anim]||frameSets[this.key].idle)[4];
+  if(this.state==='walk')idx=Math.floor(this.anim*1.2)%n;
+  else if(this.state==='idle')idx=Math.floor(this.anim*.45)%n;
+  else if(this.state==='jump')idx=Math.min(n-1,Math.floor(this.anim*.65));
+  else if(this.state==='punch'||this.state==='kick')idx=Math.min(n-1,Math.floor((18-this.attack)/4));
+  else idx=0;
+  if(this.state==='special'){
+   const r=specialSets[this.key].rect,nr=r[4],fi=Math.min(nr-1,Math.floor((34-this.special)/7));
+   const fw=r[2]/nr;
+   if(sheets[this.key].img.complete){
+    ctx.save();ctx.translate(this.x+this.w/2,this.y+this.h/2);ctx.scale(this.face,1);
+    ctx.drawImage(sheets[this.key].img,r[0]+fw*fi,r[1],fw,r[3],-this.w/2,-this.h/2,this.w,this.h);ctx.restore();
+   }
+   return;
+  }
+  drawSprite(this.key,anim,idx,this.x,this.y,this.w,this.h,this.face);
+ }
+}
+
+function start(){
+ if(!chosen)return;
+ let opponent=p2Choice;
+ if(mode==='solo'){
+  const options=Object.keys(sheets).filter(k=>k!==chosen);
+  opponent=options[Math.floor(Math.random()*options.length)];
+ }
+ if(!opponent||opponent===chosen)return;
+ p1=new Fighter(180,chosen,controls1,1,false);
+ p2=new Fighter(770,opponent,controls2,-1,mode==='solo');
+ document.getElementById('select').classList.add('hidden');document.getElementById('game').classList.remove('hidden');
+ over=false;cancelAnimationFrame(raf);loop();
+}
+
+function hit(attacker,target){
+ if(!attacker.canHit()||attacker.hitDone)return;
+ const a=attacker.attackBox(),b=target.hurtbox();
+ if(!a||!(a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y))return;
+ attacker.hitDone=true;
+ const dmg=target.block?3:(attacker.attackType==='kick'?12:9);
+ target.hp=Math.max(0,target.hp-dmg);target.hitstun=target.block?4:12;target.vx=attacker.face*(target.block?2.5:6);target.vy=target.block?0:-4;
+}
+
+function background(){
+ const g=ctx.createLinearGradient(0,0,0,GROUND);g.addColorStop(0,'#121932');g.addColorStop(1,'#35254e');
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,GROUND);
+ ctx.fillStyle='#ffd54a';ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(870,85,34,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ ctx.fillStyle='#171a30';for(let x=0;x<W;x+=75){let h=35+(x*13)%90;ctx.fillRect(x,GROUND-h,58,h);}
+ ctx.fillStyle='#0e111d';ctx.fillRect(0,GROUND,W,H-GROUND);ctx.fillStyle='#65568f';ctx.fillRect(0,GROUND,W,5);
+}
+function hud(){
+ const bw=390;
+ ctx.fillStyle='#3c1522';ctx.fillRect(35,25,bw,22);ctx.fillStyle='#35e58b';ctx.fillRect(35,25,bw*p1.hp/100,22);
+ ctx.fillStyle='#3c1522';ctx.fillRect(W-35-bw,25,bw,22);ctx.fillStyle='#ff4d5f';ctx.fillRect(W-35-bw+bw*(1-p2.hp/100),25,bw*p2.hp/100,22);
+ ctx.fillStyle='#fff';ctx.font='900 17px system-ui';ctx.fillText('P1 '+p1.name,35,68);
+ const t='P2 '+p2.name,w=ctx.measureText(t).width;ctx.fillText(t,W-35-w,68);
+ ctx.textAlign='center';ctx.fillStyle='#ffd54a';ctx.font='900 20px system-ui';ctx.fillText(mode==='solo'?'SOLO':'2 PLAYER',W/2,42);ctx.textAlign='left';
+ if(over){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffd54a';ctx.font='900 46px system-ui';ctx.fillText(p1.hp>0?p1.name+' WINS!':p2.name+' WINS!',W/2,200);ctx.font='700 18px system-ui';ctx.fillStyle='#fff';ctx.fillText('Use BACK TO MENU to start another match.',W/2,235);ctx.textAlign='left';}
+}
+function loop(){
+ background();
+ if(!over){
+  p1.input();p2.input();p1.update();p2.update();hit(p1,p2);hit(p2,p1);
+  if(p1.hp<=0||p2.hp<=0)over=true;
+ }
+ p1.draw();p2.draw();hud();
+ for(const k in pressed)delete pressed[k];
+ raf=requestAnimationFrame(loop);
+}
+
+document.getElementById('start').onclick=start;
+document.getElementById('back').onclick=()=>{
+ cancelAnimationFrame(raf);document.getElementById('game').classList.add('hidden');document.getElementById('select').classList.remove('hidden');
+ p1=p2=null;chosen=null;p2Choice=null;selectStage=1;document.getElementById('start').disabled=true;
+ document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+};
+previewCards();
+</script>
+</body>
+</html>
